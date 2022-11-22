@@ -1,0 +1,88 @@
+1) Definir funciones que devuelvan como resultado:
+a) El máximo de dos números.
+Def max = (> -> (1#); (2#))
+
+b) El máximo de una secuencia. 
+ Def max_sec = (/max)
+Ejemplo:
+FP> max_sec: <1,23,4>
+RESULT: 23
+
+c) El primer átomo de una secuencia. 
+Def eliminar_vacio = /(not o null o (1#) -> apndl; (2#)) o apndr o [id, ~<>]
+Def get_atoms = eliminar_vacio o @(atom -> id; ~<>)
+Def primer_atomo = (1#) o get_atoms
+Ejemplo
+FP> primer_atomo: <<>, 2 ,<>,<3>, <>>
+RESULT: 2
+
+d) El elemento mínimo entre los máximos por fila de una matriz (minimax). 
+Def min = (< -> (1#); (2#))
+Def min_sec = /min
+Def minimax=  min_sec o @max_sec
+Ejemplo:
+FP> minimax:<<2,3,1>,<0,2,1>>
+RESULT: 2
+
+2. Definir funciones que determinen: 
+a) La pertenencia de un elemento a una secuencia. 
+Def pertenece = /or o @eq o distr
+Ejemplo:
+pertenece:<<2,3,5>,2> -> True
+pertenece:<<2,3,5>,0> -> False
+
+b) Si una secuencia tiene un solo componente. 
+Def single = eq o [length, ~1]
+Ejemplo
+single:<2,<>>
+False
+
+c) Si la cantidad de átomos de una secuencia es par. 
+ Def esPar= eq o [~0, id] -> eq o [~0, id]; not o esPar o - o [id, ~1]
+
+3. Dada una secuencia con dos subsecuencias, definir funciones para determinar: 
+a) La unión de ambas subsecuencias. 
+Def delete_duplicates =  /(not o pertenece -> apndl; 2#) o apndr o [id, ~<>]
+Def flatten_two_series =  /apndl o apndr
+Def union = delete_duplicates o flatten_two_series
+Ejemplo:
+FP> union:  <<1,2><3,4,1>>
+RESULT: <2, 3, 4, 1>
+
+b) La intersección de ambas subsecuencias. 
+Def interseccion = eliminar_vacio o  @(pertenece -> 1#; ~<>) o distr
+Ejemplo
+FP> interseccion:  <<3,4,1>, <1,2>>
+RESULT: <1>
+
+c) La diferencia de ambas subsecuencias. 
+Def diferencia =  eliminar_vacio o @(not o pertenece -> 1#; ~<>) o flatten_two_series o [distr, distr o reverse]
+FP> diferencia: <<3,4,1>, <1,2,3>>
+RESULT: <4, 2>
+
+14.Dada una secuencia de pares ordenados donde la primera componente indica el
+equipo que resultó ganador y la segunda indica el perdedor y donde cada par
+ordenado indica un partido jugado (no hay empates) obtener
+
+a) Los equipos invictos. 
+Def invictos =  eliminar_vacio o @(not o pertenece -> 1#; ~<>) o distr o [@1#, @2#]
+Ejemplo:
+FP> invictos: <<A,B>,<C,D>,<E,F>,<G,A>, <H,E>>
+RESULT: <C, G, H>
+
+b) Los que siempre perdieron. 
+Def perdedores =  eliminar_vacio o @(not o pertenece -> 1#; ~<>) o distr o [@2#, @1#]
+Ejemplo:
+FP>perdedores: <<A,B>,<C,D>,<E,F>,<G,A>, <H,E>>
+
+c) Los que ganaron más veces de las que perdieron. 
+Def count = /+ o @(eq -> ~1; ~0) o distl
+Def count_wins = @count o distr o [jugadores, ganadores]
+Def count_losses = @count o distr o [jugadores, perdedores]
+Def ganaron_mas =  eliminar_vacio o @(> o [2,3] -> 1; ~<>) o trans o [jugadores, count_wins, count_losses]:
+EJemplo
+FP> ganaron_mas:<<A,B>,<C,D>,<E,F>,<G,A>, <A,B>>
+RESULT: <C, E, G, A>
+
+e) Los que perdieron y ganaron la misma cantidad de veces. 
+Def ganaron_y_perdieron =  eliminar_vacio o @(eq o [2,3] -> 1; ~<>) o trans o [jugadores, count_wins, count_losses]:
